@@ -4,6 +4,8 @@ openssl req -newkey rsa:4096 -nodes -sha256 -keyout domain.key -x509 -days 365 -
 
 sudo semanage port -a -t http_port_t -p tcp 5000
 
+htpasswd -bBc /opt/registry/auth/htpasswd <user_name> <password>
+
 podman run --name mirror-registry -p 5000:5000 \
 -v /opt/registry/data:/var/lib/registry:z \
 -v /opt/registry/auth:/auth:z \
