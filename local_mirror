@@ -1,0 +1,49 @@
+mkdir -p /opt/registry/{auth,certs,data}
+cd /opt/registry/certs
+openssl req -newkey rsa:4096 -nodes -sha256 -keyout domain.key -x509 -days 365 -out domain.crt
+
+sudo semanage port -a -t http_port_t -p tcp 5000
+
+podman run --name mirror-registry -p 5000:5000 \
+-v /opt/registry/data:/var/lib/registry:z \
+-v /opt/registry/auth:/auth:z \
+-e "REGISTRY_AUTH=htpasswd" \
+-e "REGISTRY_AUTH_HTPASSWD_REALM=Registry Realm" \
+-e REGISTRY_AUTH_HTPASSWD_PATH=/auth/htpasswd \
+-v /opt/registry/certs:/certs:z \
+-e REGISTRY_HTTP_TLS_CERTIFICATE=/certs/domain.crt \
+-e REGISTRY_HTTP_TLS_KEY=/certs/domain.key \
+-d docker.io/library/registry:2
+
+
+firewall-cmd --add-port=5000/tcp --zone=internal --permanent 
+firewall-cmd --add-port=5000/tcp --zone=public   --permanent
+firewall-cmd --reload
+
+
+cp /opt/registry/certs/domain.crt /etc/pki/ca-trust/source/anchors/
+update-ca-trust
+
+echo -n '<user_name>:<password>' | base64 -w0
+
+cat ./pull-secret.text | jq .  > /root/pull-secret.json
+
+update pull-secret.json
+
+{
+  "auths": {
+    "bastion:5000": {
+      "auth": "BGVtbYk3ZHAtqXs=",
+      "email": ""you@example.com"
+    },
+
+
+export OCP_RELEASE=4.7.24
+export LOCAL_REGISTRY='registry.me:5000'
+export LOCAL_REPOSITORY='ocp4/openshift4'
+export PRODUCT_REPO='openshift-release-dev'
+export LOCAL_SECRET_JSON='/opt/registry/pull-secret.json'
+export RELEASE_NAME="ocp-release"
+export ARCHITECTURE=x86_64
+export GODEBUG=x509ignoreCN=0
+
