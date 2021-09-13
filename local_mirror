@@ -1,6 +1,6 @@
 mkdir -p /opt/registry/{auth,certs,data}
 cd /opt/registry/certs
-openssl req -newkey rsa:4096 -nodes -sha256 -keyout domain.key -x509 -days 365 -out domain.crt
+openssl req -newkey rsa:4096 -nodes -sha256 -keyout domain.key -x509 -days 365 -out domain.crt -addext subjectAltName=IP:172.18.142.30
 
 sudo semanage port -a -t http_port_t -p tcp 5000
 
